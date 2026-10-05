@@ -7,6 +7,7 @@ import { requireXhrHeader } from './middleware/auth.js'
 import authRoutes from './routes/auth.js'
 import uploadRoutes from './routes/uploads.js'
 import { adminHero, publicHero } from './routes/hero.js'
+import adminHeroes from './routes/admin-heroes.js'
 
 export function createApp() {
     const app = express()
@@ -25,6 +26,7 @@ export function createApp() {
     app.use('/api/public/hero', publicHero)
 
     app.use('/api/auth', requireXhrHeader, authRoutes)
+    app.use('/api/admin/heroes', requireXhrHeader, adminHeroes)
     app.use('/api/admin/hero', requireXhrHeader, adminHero)
     app.use('/api/admin/uploads', requireXhrHeader, uploadRoutes)
 
