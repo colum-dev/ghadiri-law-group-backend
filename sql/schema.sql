@@ -1,62 +1,44 @@
 CREATE TABLE IF NOT EXISTS admins (
-  id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  username      VARCHAR(64)  NOT NULL,
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  username VARCHAR(64) NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
-  created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  UNIQUE KEY uq_admins_username (username)
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id), UNIQUE KEY uq_admins_username (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- بنر بالای صفحه‌ها. هر صفحه یک slug دارد (فعلاً: home)
 CREATE TABLE IF NOT EXISTS hero_banners (
-  id              INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  slug            VARCHAR(64)  NOT NULL,
-  slogan          VARCHAR(255) NOT NULL,
-  title           VARCHAR(500) NOT NULL,
-  description     TEXT         NOT NULL,
-  image_path      VARCHAR(255) NULL,
-  image_width     SMALLINT UNSIGNED NULL,
-  image_height    SMALLINT UNSIGNED NULL,
-  image_alt       VARCHAR(255) NOT NULL DEFAULT '',
-  more_info_link  VARCHAR(255) NOT NULL,
-  contact_us_link VARCHAR(255) NOT NULL,
-  updated_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  UNIQUE KEY uq_hero_slug (slug)
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT, slug VARCHAR(64) NOT NULL, slogan VARCHAR(255) NOT NULL,
+  title VARCHAR(500) NOT NULL, description TEXT NOT NULL, image_path VARCHAR(255) NULL,
+  image_width SMALLINT UNSIGNED NULL, image_height SMALLINT UNSIGNED NULL, image_alt VARCHAR(255) NOT NULL DEFAULT '',
+  more_info_link VARCHAR(255) NOT NULL, contact_us_link VARCHAR(255) NOT NULL,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id), UNIQUE KEY uq_hero_slug (slug)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS hero_stats (
-  id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  hero_id    INT UNSIGNED NOT NULL,
-  icon_path  VARCHAR(255) NULL,
-  stat_value INT UNSIGNED NOT NULL,
-  suffix     VARCHAR(8)   NOT NULL DEFAULT '',
-  label      VARCHAR(100) NOT NULL,
-  sort_order TINYINT UNSIGNED NOT NULL DEFAULT 0,
-  PRIMARY KEY (id),
-  KEY idx_hero_stats_order (hero_id, sort_order),
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT, hero_id INT UNSIGNED NOT NULL, icon_path VARCHAR(255) NULL,
+  stat_value INT UNSIGNED NOT NULL, suffix VARCHAR(8) NOT NULL DEFAULT '', label VARCHAR(100) NOT NULL,
+  sort_order TINYINT UNSIGNED NOT NULL DEFAULT 0, PRIMARY KEY (id), KEY idx_hero_stats_order (hero_id, sort_order),
   CONSTRAINT fk_hero_stats_hero FOREIGN KEY (hero_id) REFERENCES hero_banners (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS about_sections (
-  id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  slug       VARCHAR(64) NOT NULL,
-  title      VARCHAR(255) NOT NULL,
-  image_path VARCHAR(255) NULL,
-  image_width SMALLINT UNSIGNED NULL,
-  image_height SMALLINT UNSIGNED NULL,
-  image_alt  VARCHAR(255) NOT NULL DEFAULT '',
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  UNIQUE KEY uq_about_slug (slug)
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT, slug VARCHAR(64) NOT NULL, title VARCHAR(255) NOT NULL,
+  image_path VARCHAR(255) NULL, image_width SMALLINT UNSIGNED NULL, image_height SMALLINT UNSIGNED NULL,
+  image_alt VARCHAR(255) NOT NULL DEFAULT '', updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id), UNIQUE KEY uq_about_slug (slug)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS about_section_descriptions (
-  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  about_id INT UNSIGNED NOT NULL,
-  description TEXT NOT NULL,
-  sort_order TINYINT UNSIGNED NOT NULL DEFAULT 0,
-  PRIMARY KEY (id),
-  KEY idx_about_descriptions_order (about_id, sort_order),
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT, about_id INT UNSIGNED NOT NULL, description TEXT NOT NULL,
+  sort_order TINYINT UNSIGNED NOT NULL DEFAULT 0, PRIMARY KEY (id), KEY idx_about_descriptions_order (about_id, sort_order),
   CONSTRAINT fk_about_descriptions_about FOREIGN KEY (about_id) REFERENCES about_sections (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS home_sections (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  slug VARCHAR(64) NOT NULL,
+  content JSON NOT NULL,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id), UNIQUE KEY uq_home_section_slug (slug)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
