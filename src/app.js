@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.js'
 import uploadRoutes from './routes/uploads.js'
 import { adminHero, publicHero } from './routes/hero.js'
 import adminHeroes from './routes/admin-heroes.js'
+import { adminAbout, publicAbout } from './routes/about.js'
 
 export function createApp() {
     const app = express()
@@ -24,10 +25,12 @@ export function createApp() {
     app.get('/api/health', (_req, res) => res.json({ ok: true }))
 
     app.use('/api/public/hero', publicHero)
+    app.use('/api/public/about', publicAbout)
 
     app.use('/api/auth', requireXhrHeader, authRoutes)
     app.use('/api/admin/heroes', requireXhrHeader, adminHeroes)
     app.use('/api/admin/hero', requireXhrHeader, adminHero)
+    app.use('/api/admin/about', requireXhrHeader, adminAbout)
     app.use('/api/admin/uploads', requireXhrHeader, uploadRoutes)
 
     app.use('/api', (_req, res) => res.status(404).json({ message: 'پیدا نشد' }))

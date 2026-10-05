@@ -41,4 +41,19 @@ if (heroes[0]) {
     console.log('بنر صفحهٔ اول ساخته شد')
 }
 
+const [aboutRows] = await pool.query("SELECT id FROM about_sections WHERE slug = 'home-about-us'")
+if (aboutRows[0]) {
+    console.log('بخش دربارهٔ ما از قبل وجود دارد')
+} else {
+    const [r] = await pool.query(
+        `INSERT INTO about_sections (slug, title, image_alt) VALUES ('home-about-us', ?, ?)`,
+        ['این یک تایتل نمونه است', 'دربارهٔ ما'],
+    )
+    await pool.query(
+        'INSERT INTO about_section_descriptions (about_id, description, sort_order) VALUES (?, ?, ?)',
+        [r.insertId, 'سلام ای دسته گل یاسمن', 0],
+    )
+    console.log('بخش دربارهٔ ما ساخته شد')
+}
+
 await pool.end()
