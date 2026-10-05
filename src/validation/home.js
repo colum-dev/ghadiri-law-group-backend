@@ -1,0 +1,16 @@
+import { z } from 'zod'
+const s = (max) => z.string().trim().max(max).default('')
+const req = (max) => z.string().trim().min(1).max(max)
+const icon = z.string().regex(/^[a-z0-9-]{1,32}$/).optional()
+const link = z.string().trim().max(255).regex(/^(\/|#|https?:\/\/)/, 'لینک نامعتبر').or(z.literal('')).default('')
+const uploadPath = z.string().regex(/^\/uploads\/[\w.-]+$/).nullable().default(null)
+const list = (item, max) => z.array(item).max(max).default([])
+const lines = (max, count) => z.array(z.string().trim().max(max)).max(count).default([]).transform((a) => a.filter(Boolean))
+const header = { title: s(200), subtitle: s(600) }
+const departments = z.object({ ...header, buttonText: s(60), buttonLink: link, items: list(z.object({ title: req(120), text: s(600), icon }), 30) })
+const bestCases = z.object({ ...header, buttonText: s(60), buttonLink: link, items: list(z.object({ tag: s(80), title: req(200), result: s(80), statValue: s(16), statUnit: s(60), text: s(600) }), 12) })
+const cases = z.object({ ...header, items: list(z.object({ type: z.enum(['cover', 'quote', 'stat']), tag: s(80), title: req(200), result: s(80), summary: s(800), quote: s(400), statValue: s(16), statUnit: s(60), icon, pattern: z.enum(['dots', 'lines', 'grid', 'waves', 'rings']).optional(), size: z.enum(['s', 'm', 'l']).optional(), inv: z.boolean().optional(), steps: lines(200, 10) }), 40) })
+const coworkers = z.object({ ...header, team: list(z.object({ name: req(120), field: s(120), edu: s(200), photo: uploadPath }), 40), principlesTitle: s(200), principlesSubtitle: s(200), principles: list(z.object({ title: req(120), text: s(800) }), 20), reasonsTitle: s(200), reasonsSubtitle: s(600), reasons: list(z.object({ title: req(120), text: s(600), icon }), 20) })
+const contact = z.object({ ...header, status: s(200), marqueeWords: lines(60, 30) })
+const blogs = z.object(header)
+export const homeUpdateSchema = z.object(Object.fromEntries(Object.entries({ departments, bestCases, cases, coworkers, contact, blogs }).map(([k, v]) => [k, v.optional()]))).strict()
