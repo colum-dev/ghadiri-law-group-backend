@@ -39,3 +39,21 @@ export function requireXhrHeader(req, res, next) {
     }
     next()
 }
+
+// X-Requested-With تنها به‌تنهایی CSRF protection نیست؛ مبدأ واقعی مرورگر را هم بررسی می‌کنیم.
+export function requireTrustedOrigin(req, res, next) {
+    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next()
+
+    const candidates = [req.get('origin'), req.get('referer')].filter(Boolean)
+    const trusted = new Set(config.corsOrigins.map((origin) => origin.replace(/\/$/, '')))
+    const publicOrigin = (() => {
+        try { return new URL(config.publicUrl).origin } catch { return null }
+    })()
+    if (publicOrigin) trusted.add(publicOrigin)
+
+    const valid = candidates.some((value) => {
+        try { return trusted.has(new URL(value).origin) } catch { return false }
+    })
+    if (!valid) return res.status(403).json({ message: 'مبدأ درخواست معتبر نیست' })
+    next()
+}
