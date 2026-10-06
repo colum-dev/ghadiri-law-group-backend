@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import cookieParser from 'cookie-parser'
+import rateLimit from 'express-rate-limit'
 import { config } from './config.js'
 import { requireTrustedOrigin, requireXhrHeader } from './middleware/auth.js'
 import authRoutes from './routes/auth.js'
@@ -12,4 +13,22 @@ import { adminAbout, publicAbout } from './routes/about.js'
 import { adminHome, publicHome } from './routes/home.js'
 import { adminPages, publicPages } from './routes/pages.js'
 import { adminBlog, publicBlog } from './routes/blog.js'
-export function createApp(){const app=express();app.disable('x-powered-by');if(config.isProd)app.set('trust proxy',1);app.use(helmet({crossOriginResourcePolicy:{policy:'cross-origin'}}));app.use(cors({origin:config.corsOrigins,credentials:true}));const jsonSmall=express.json({limit:'100kb'}),jsonLarge=express.json({limit:'1mb'});app.use((req,res,next)=>(req.path.startsWith('/api/admin/pages')||req.path.startsWith('/api/admin/blog-posts')?jsonLarge:jsonSmall)(req,res,next));app.use(cookieParser());app.use('/uploads',express.static(config.uploadDir,{maxAge:'7d',immutable:true,index:false}));app.get('/api/health',(_req,res)=>res.json({ok:true}));app.use('/api/public/hero',publicHero);app.use('/api/public/about',publicAbout);app.use('/api/public/home',publicHome);app.use('/api/public/pages',publicPages);app.use('/api/public/blog-posts',publicBlog);app.use('/api',requireTrustedOrigin);app.use('/api/auth',requireXhrHeader,authRoutes);app.use('/api/admin/heroes',requireXhrHeader,adminHeroes);app.use('/api/admin/hero',requireXhrHeader,adminHero);app.use('/api/admin/about',requireXhrHeader,adminAbout);app.use('/api/admin/home',requireXhrHeader,adminHome);app.use('/api/admin/pages',requireXhrHeader,adminPages);app.use('/api/admin/blog-posts',requireXhrHeader,adminBlog);app.use('/api/admin/uploads',requireXhrHeader,uploadRoutes);app.use('/api',(_req,res)=>res.status(404).json({message:'پیدا نشد'}));app.use((err,_req,res,_next)=>{if(err.type==='entity.parse.failed')return res.status(400).json({message:'بدنهٔ درخواست معتبر نیست'});if(err.type==='entity.too.large')return res.status(413).json({message:'حجم درخواست بیش از حد مجاز است'});if(err.status&&err.status<500)return res.status(err.status).json({message:err.message});console.error(err);res.status(500).json({message:'خطای داخلی سرور'})});return app}
+
+const adminWriteLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 180,
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: (req) => ['GET', 'HEAD', 'OPTIONS'].includes(req.method),
+    message: { message: 'تعداد درخواست‌های مدیریتی زیاد بود؛ چند دقیقه بعد دوباره امتحان کنید' },
+})
+
+const uploadLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: 'تعداد آپلودها زیاد بود؛ چند دقیقه بعد دوباره امتحان کنید' },
+})
+
+export function createApp(){const app=express();app.disable('x-powered-by');if(config.isProd)app.set('trust proxy',1);app.use(helmet({crossOriginResourcePolicy:{policy:'cross-origin'}}));app.use(cors({origin:config.corsOrigins,credentials:true}));const jsonSmall=express.json({limit:'100kb'}),jsonLarge=express.json({limit:'1mb'});app.use((req,res,next)=>(req.path.startsWith('/api/admin/pages')||req.path.startsWith('/api/admin/blog-posts')?jsonLarge:jsonSmall)(req,res,next));app.use(cookieParser());app.use('/uploads',express.static(config.uploadDir,{maxAge:'7d',immutable:true,index:false}));app.get('/api/health',(_req,res)=>res.json({ok:true}));app.use('/api/public/hero',publicHero);app.use('/api/public/about',publicAbout);app.use('/api/public/home',publicHome);app.use('/api/public/pages',publicPages);app.use('/api/public/blog-posts',publicBlog);app.use('/api',requireTrustedOrigin);app.use('/api/auth',requireXhrHeader,authRoutes);app.use('/api/admin/heroes',adminWriteLimiter,requireXhrHeader,adminHeroes);app.use('/api/admin/hero',adminWriteLimiter,requireXhrHeader,adminHero);app.use('/api/admin/about',adminWriteLimiter,requireXhrHeader,adminAbout);app.use('/api/admin/home',adminWriteLimiter,requireXhrHeader,adminHome);app.use('/api/admin/pages',adminWriteLimiter,requireXhrHeader,adminPages);app.use('/api/admin/blog-posts',adminWriteLimiter,requireXhrHeader,adminBlog);app.use('/api/admin/uploads',uploadLimiter,requireXhrHeader,uploadRoutes);app.use('/api',(_req,res)=>res.status(404).json({message:'پیدا نشد'}));app.use((err,_req,res,_next)=>{if(err.type==='entity.parse.failed')return res.status(400).json({message:'بدنهٔ درخواست معتبر نیست'});if(err.type==='entity.too.large')return res.status(413).json({message:'حجم درخواست بیش از حد مجاز است'});if(err.status&&err.status<500)return res.status(err.status).json({message:err.message});console.error(err);res.status(500).json({message:'خطای داخلی سرور'})});return app}
