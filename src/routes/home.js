@@ -4,10 +4,23 @@ import { requireAdmin } from '../middleware/auth.js'
 import { homeUpdateSchema } from '../validation/home.js'
 import { HOME_DEFAULTS } from '../data/homeDefaults.js'
 
+const CONTACT_DEFAULTS = {
+  status: 'کنار شما، از همان اولین تماس',
+  title: 'پرونده‌ات را به دست‌های مطمئن بسپار',
+  subtitle: 'این یک متن نمونه است. یک تماس کوتاه کافی است تا مسیر پرونده‌ات روشن شود.',
+  phone: '02100000000', phoneLabel: '۰۲۱-۰۰۰۰۰۰۰۰',
+  whatsapp: 'https://wa.me/989000000000',
+  email: 'info@example.com', address: 'تهران، خیابان نمونه، پلاک ۰',
+  hours: 'شنبه تا پنجشنبه، ۹ تا ۱۷', endpoint: '', marqueeWords: [],
+}
+
 async function loadSections() {
   const [rows] = await pool.query('SELECT slug, content FROM home_sections ORDER BY id')
   const fromDb = Object.fromEntries(rows.map((row) => [row.slug, typeof row.content === 'string' ? JSON.parse(row.content) : row.content]))
-  return Object.fromEntries(Object.entries(HOME_DEFAULTS).map(([slug, def]) => [slug, { ...def, ...(fromDb[slug] || {}) }]))
+  return Object.fromEntries(Object.entries(HOME_DEFAULTS).map(([slug, def]) => {
+    const defaults = slug === 'contact' ? { ...def, ...CONTACT_DEFAULTS } : def
+    return [slug, { ...defaults, ...(fromDb[slug] || {}) }]
+  }))
 }
 
 export const publicHome = Router()
