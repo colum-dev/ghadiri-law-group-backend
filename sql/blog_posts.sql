@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS blog_posts (
+ id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+ slug VARCHAR(120) NOT NULL,
+ title VARCHAR(200) NOT NULL,
+ excerpt VARCHAR(500) NOT NULL DEFAULT '',
+ category VARCHAR(32) NOT NULL,
+ author VARCHAR(100) NOT NULL DEFAULT '',
+ cover_path VARCHAR(255) NULL, cover_width SMALLINT UNSIGNED NULL, cover_height SMALLINT UNSIGNED NULL, cover_alt VARCHAR(255) NOT NULL DEFAULT '',
+ content_html MEDIUMTEXT NOT NULL,
+ toc JSON NOT NULL,
+ reading_minutes SMALLINT UNSIGNED NOT NULL DEFAULT 1,
+ status ENUM('draft','published') NOT NULL DEFAULT 'draft',
+ meta_title VARCHAR(200) NOT NULL DEFAULT '',
+ meta_description VARCHAR(320) NOT NULL DEFAULT '',
+ published_at DATETIME NULL,
+ created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+ PRIMARY KEY (id), UNIQUE KEY uq_blog_posts_slug (slug),
+ KEY idx_blog_posts_public (status, published_at), KEY idx_blog_posts_category (category, status, published_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
