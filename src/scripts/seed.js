@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs'
 import { pool } from '../db.js'
 import { HOME_DEFAULTS } from '../data/homeDefaults.js'
+import { PAGE_DEFAULTS } from '../data/pageDefaults.js'
 
 const username = process.env.ADMIN_USERNAME || 'admin'
 const password = process.env.ADMIN_PASSWORD || ''
@@ -16,9 +17,8 @@ if (!heroes[0]) {
 const [aboutRows] = await pool.query("SELECT id FROM about_sections WHERE slug = 'home-about-us'")
 if (!aboutRows[0]) { const [r] = await pool.query('INSERT INTO about_sections (slug, title, image_alt) VALUES (?,?,?)', ['home-about-us', 'این یک تایتل نمونه است', 'دربارهٔ ما']); await pool.query('INSERT INTO about_section_descriptions (about_id, description, sort_order) VALUES (?,?,?)', [r.insertId, 'سلام ای دسته گل یاسمن', 0]) }
 for (const [slug, content] of Object.entries(HOME_DEFAULTS)) await pool.query('INSERT IGNORE INTO home_sections (slug, content) VALUES (?, ?)', [slug, JSON.stringify(content)])
+for (const [slug, content] of Object.entries(PAGE_DEFAULTS)) await pool.query('INSERT IGNORE INTO page_contents (slug, content) VALUES (?, ?)', [slug, JSON.stringify(content)])
 
-// دادهٔ تستی همان مقالاتی که قبلاً از src/app/data/blogs.js نمایش داده می‌شدند.
-// INSERT IGNORE باعث می‌شود اجرای دوبارهٔ seed مقاله‌های موجود را overwrite نکند.
 const TEST_BLOGS = [
   ['divorce-agreement-steps', 'طلاق توافقی چگونه و در چه مدتی انجام می‌شود؟', 'مراحل، مدارک لازم و نکاتی که پیش از مراجعه به دادگاه خانواده باید بدانید.', 'family', 'سارا احمدی', 'مراحل و مدارک لازم', 'در این مقاله مراحل طلاق توافقی، مدارک لازم و نکاتی را بررسی می‌کنیم که پیش از مراجعه به دادگاه خانواده باید بدانید.'],
   ['checking-property-deed', 'پیش از پرداخت بیعانه، سند را این‌طور استعلام بگیرید', 'پنج نکتهٔ ساده که از خیلی از اختلافات ملکی جلوگیری می‌کند.', 'real-estate', 'سارا احمدی', 'استعلام سند ملک', 'پیش از پرداخت بیعانه، وضعیت سند و مالکیت ملک را با چند بررسی ساده و کاربردی کنترل کنید.'],
@@ -32,7 +32,8 @@ const TEST_BLOGS = [
 ]
 for (const [slug, title, excerpt, category, author, heading, paragraph] of TEST_BLOGS) {
   const html = `<h2>${heading}</h2><p>${paragraph}</p><h3>جمع‌بندی</h3><p>${excerpt}</p>`
-  await pool.query(`INSERT IGNORE INTO blog_posts (slug, title, excerpt, category, author, content_html, toc, reading_minutes, status, meta_title, meta_description, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'published', ?, ?, DATE_SUB(NOW(), INTERVAL 1 DAY))`, [slug, title, excerpt, category, author, html, JSON.stringify([{ id: heading.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-'), level: 2, text: heading }, { id: 'جمع‌بندی', level: 3, text: 'جمع‌بندی' }]), Math.max(1, Math.ceil(paragraph.split(/\s+/).length / 120)), title, excerpt])
+  await pool.query(`INSERT IGNORE INTO blog_posts (slug, title, excerpt, category, author, content_html, toc, reading_minutes, status, meta_title, meta_description, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'published', ?, ?, DATE_SUB(NOW(), INTERVAL 1 DAY))`, [slug, title, excerpt, category, author, html, JSON.stringify([{ id: heading.toLowerCase().replace(/[^\\p{L}\\p{N}]+/gu, '-'), level: 2, text: heading }, { id: 'جمع‌بندی', level: 3, text: 'جمع‌بندی' }]), Math.max(1, Math.ceil(paragraph.split(/\\s+/).length / 120)), title, excerpt])
 }
 console.log(`${TEST_BLOGS.length} مقالهٔ تستی بررسی و در صورت نیاز درج شد`)
+console.log(`${Object.keys(PAGE_DEFAULTS).length} صفحهٔ نمونه در صورت نیاز درج شد`)
 await pool.end()
